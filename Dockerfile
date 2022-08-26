@@ -2,7 +2,7 @@
 FROM python:3.8-alpine
 
 # By default, listen on port 5000
-EXPOSE 5001/tcp
+EXPOSE 5000/tcp
 
 # Set the working directory in the container
 WORKDIR /app
