@@ -27,6 +27,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+*.pem
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -131,3 +132,8 @@ dmypy.json
 
 # editor settings
 .vscode
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
