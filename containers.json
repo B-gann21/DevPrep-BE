@@ -1,6 +1,6 @@
 {
     "flask": {
-        "image": ":devprep-be.flask-container.3",
+        "image": ":devprep-be.flask-container.4",
         "ports": {
             "5000": "HTTP"
         }
