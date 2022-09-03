@@ -6,7 +6,8 @@ cache
 cache/*
 # C extensions
 *.so
-test.db
+*.db
+*.swp
 # Distribution / packaging
 .Python
 build/
