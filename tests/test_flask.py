@@ -1,105 +1,7 @@
-from app import app, db, Card
+from app import app, db
 from models.user import User
+from models.card import Card
 import json
-# from models import UserModel, CardModel
-db.create_all()
-
-def test_register_user():
-    users = User.query.all()
-    for user in users:
-        db.session.delete(user)
-        db.session.commit()
-
-    body = {'username': 'bonnyjowman08', 'email': 'bonfjowman.hello@notreal.com'}
-
-    response = app.test_client().post(
-            'api/v1/users',
-            data=json.dumps(body),
-            headers={"Content-Type": "application/json"}
-        )
-    json_data = json.loads(response.data)['data']
-
-    assert response.status_code == 201
-
-    assert json_data['type'] == 'users'
-    assert json_data['attributes']['username'] == 'bonnyjowman08'
-
-def test_login_user():
-    users = User.query.all()
-    for user in users:
-        db.session.delete(user)
-        db.session.commit()
-
-    body = {'username': 'bonnyjowman08', 'email': 'bonfjowman.hello@notreal.com'}
-    seed_1 = User(email=body['email'], username=body['username'])
-    seed_2 = User(email='test@test.com', username='megahacker3000')
-    db.session.add(seed_1)
-    db.session.add(seed_2)
-    db.session.commit()
-    response = app.test_client().post(
-            'api/v1/login',
-            data=json.dumps(body),
-            headers={"Content-Type": "application/json"}
-        )
-
-    json_data = json.loads(response.data)['data']
-    assert response.status_code == 200
-
-    assert json_data['type'] == 'userDashboard'
-    assert type(json_data['userId']) is str
-    assert json_data['attributes']['username'] == 'bonnyjowman08'
-    assert type(json_data['attributes']['preparednessRating']) is dict
-    assert type(json_data['attributes']['preparednessRating']['technicalBE']) is float or "null"
-    assert type(json_data['attributes']['preparednessRating']['technicalFE']) is float or "null"
-    assert type(json_data['attributes']['preparednessRating']['behavioral']) is float or "null"
-    assert type(json_data['attributes']['cwAttributes']) is dict
-    assert type(json_data['attributes']['cwAttributes']['cwLeaderboardPosition']) is int or "null"
-    assert type(json_data['attributes']['cwAttributes']['totalCompleted']) is int or "null"
-    assert type(json_data['attributes']['cwAttributes']['languageRanks']) is dict
-
-def test_update_user():
-    body = {'username': 'bonnyjowman08', 'codewarsUsername': 'MichaelPutnam2'}
-    user = User.query.filter_by(username='bonnyjowman08').first()
-
-    response = app.test_client().patch(
-            f'api/v1/users/{user.id}',
-            data=json.dumps(body),
-            headers={"Content-Type": "application/json"}
-        )
-
-    json_data = json.loads(response.data)['data']
-
-    assert response.status_code == 200
-    assert json_data['type'] == 'userDashboard'
-    assert type(json_data['userId']) is str
-    assert json_data['attributes']['username'] == 'bonnyjowman08'
-    assert type(json_data['attributes']['preparednessRating']) is dict
-    assert type(json_data['attributes']['preparednessRating']['technicalBE']) is float or "null"
-    assert type(json_data['attributes']['preparednessRating']['technicalFE']) is float or "null"
-    assert type(json_data['attributes']['preparednessRating']['behavioral']) is float or "null"
-    assert type(json_data['attributes']['cwAttributes']) is dict
-    assert type(json_data['attributes']['cwAttributes']['cwLeaderboardPosition']) is int or "null"
-    assert type(json_data['attributes']['cwAttributes']['totalCompleted']) is int or "null"
-    assert type(json_data['attributes']['cwAttributes']['languageRanks']) is dict
-
-def test_average_card_ratings():
-    user = User(username='coolguy123', email='coolguy123@gmail.com')
-    fe_card1 = Card(category='technicalFE', front='an FE question', rating=5)
-    fe_card2 = Card(category='technicalFE', front='an FE question', rating=4)
-    be_card1 = Card(category='technicalBE', front='a BE question', rating=5)
-    be_card2 = Card(category='technicalBE', front='a BE question', rating=3)
-    behav_card1 = Card(category='behavioral', front='a behavioral question', rating=4)
-    behav_card2 = Card(category='behavioral', front='a behavioral question', rating=3)
-    cards = [fe_card1, fe_card2, be_card1, be_card2, behav_card1, behav_card2]
-    for card in cards:
-        user.cards.append(card)
-
-    db.session.add(user)
-    db.session.commit()
-
-    assert user.average_card_rating_by_category('technicalBE') == 4.0
-    assert user.average_card_rating_by_category('technicalFE') == 4.5
-    assert user.average_card_rating_by_category('behavioral') == 3.5
 
 def test_card_create():
     body = {'category': 'technicalBE', 'frontSide': 'What is MVC?', 'backSide': 'stuff and things'}
@@ -125,19 +27,6 @@ def test_card_create_invalid_user_id():
     assert response.status_code == 400
 
     assert json_data['error'] == 'invalid user id'
-
-def xtest_card_get():
-    # Needs refactoring to make sure user and card with id's '1' are created before this is run
-    response = app.test_client().get('api/v1/users/1/cards/1')
-    json_data = json.loads(response.data)
-
-    assert response.status_code == 200
-
-    assert json_data['type'] == 'flashCard'
-    assert json_data['attributes']['category'] == 'technicalBE'
-    assert type(json_data['attributes']['competenceRating']) == float
-    assert json_data['attributes']['frontSide'] == 'What is MVC?'
-    assert json_data['attributes']['backSide'] == 'stuff and things'
 
 def test_card_update():
     cards = Card.query.all()
@@ -251,25 +140,3 @@ def test_cards_get_list():
         assert type(card['attributes']['frontSide']) == str
         assert type(card['attributes']['backSide']) == str
         assert type(card['attributes']['userId']) == str
-
-def test_generate_default_cards():
-    for card in Card.query.all():
-        db.session.delete(card)
-        db.session.commit()
-
-    for user in User.query.all():
-        db.session.delete(user)
-        db.session.commit()
-
-    user = User(
-        username='Billy Jo',
-        email='bj@bjs.com'
-    )
-    db.session.add(user)
-    db.session.commit()
-
-    assert user.cards == []
-
-    user.generate_default_cards()
-
-    assert len(user.cards) == 130
